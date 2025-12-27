@@ -1,4 +1,26 @@
 clc;
+clc;
+clear;
+
+[x, fs] = audioread("C:\Users\rick2\Documents\Multi_FX\Matlab\data\test.wav");
+
+%% BUILD FX CHAIN
+
+effects = {};
+disp("Build FX Chain")
+
+% Gain
+gain_on = input("Gain required? ", "s");
+    if strcmpi(gain_on, 'y')
+        disp("Gain enable");
+        gainVal = input("Enter gain value: ");
+        gainVal = max(min(gainVal, 5),0); % Clamped from 0-5
+
+        effects{end+1}.name = "Gain";
+        effects{end}.process = @(x) applyGain(x, gainVal);
+    end 
+
+% Hard Clipping
 hc_on = input("Hard Clipping required? ", "s");
     if strcmpi(hc_on, 'y')
         disp("Hard clipping enabled");
@@ -18,6 +40,32 @@ sc_on = input("Soft Clipping required? ", "s");
         
         effects{end+1}.name = "Soft Clipping";
         effects{end}.process = @(x) applySoftClipping(x, threshold);
+    end
+
+% First Order LPF
+lpf_on = input("LPF required? ", "s");
+    if strcmpi(lpf_on, 'y')
+        disp("LPF enabled");      
+        fc = input("Enter cutoff freq (20-20,000): ");
+        fc = max(min(fc, 20000),20); % Clamped to audible range
+        
+        effects{end+1}.name = "LPF";
+        effects{end}.process = @(x) applyLPF(x, fs, fc);
+
+        plotLPF(fs, fc);
+    end
+
+% First Order HPF
+hpf_on = input("HPF required? ", "s");
+    if strcmpi(hpf_on, 'y')
+        disp("HPF enabled");      
+        fc = input("Enter cutoff freq (20-20,000): ");
+        fc = max(min(fc, 20000),20); % Clamped to audible range
+        
+        effects{end+1}.name = "HPF";
+        effects{end}.process = @(x) applyHPF(x, fs, fc);
+
+        plotHPF(fs, fc);
     end
 
 % Delay
@@ -94,6 +142,9 @@ legend('Input','Output (Gain + Clip)');
 xlabel('Time (s)'); ylabel('Amplitude');
 title('Waveform Comparison');
 grid on;
+
+% Frequency Response of filters
+
 
 % Metering
 fprintf("Input peak:  %.3f\n", max(abs(x)));
